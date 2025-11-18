@@ -1,5 +1,5 @@
 use crate::{
-	HitRecord, Material, Ray,
+	HitRecord, Material, Ray, ScatterRecord,
 	vec3::{self, Vec3},
 };
 
@@ -17,21 +17,16 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-	fn scatter(
-		&self,
-		_: Ray,
-		rec: &HitRecord,
-		attenuation: &mut Vec3,
-		scattered: &mut Ray,
-	) -> bool {
+	fn scatter(&self, _: Ray, rec: &HitRecord) -> Option<ScatterRecord> {
 		let mut scatter_direction = rec.normal + vec3::random_unit_vector();
 
 		if scatter_direction.is_near_zero() {
 			scatter_direction = rec.normal;
 		}
 
-		*attenuation = self.albedo;
-		*scattered = Ray::new(rec.p, scatter_direction);
-		true
+		Some(ScatterRecord {
+			attenuation: self.albedo,
+			scattered: Ray::new(rec.p, scatter_direction),
+		})
 	}
 }

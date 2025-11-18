@@ -4,8 +4,8 @@ use std::{
 };
 
 use ray_tracer::{
-	Camera, Dielectric, HitRecord, Hittable, HittableList, Lambertian, Metal, Ray, Sphere, Vec3,
-	color, utils, vec3,
+	Camera, Dielectric, Hittable, HittableList, Lambertian, Metal, Ray, Sphere, Vec3, color, utils,
+	vec3,
 };
 use rayon::prelude::*;
 
@@ -71,18 +71,9 @@ fn ray_color<H: Hittable>(r: Ray, world: &H, depth: i32) -> Vec3 {
 		return Vec3::default();
 	}
 
-	let mut rec = HitRecord::default();
-	if world.hit(r, 0.001, utils::INFINITY, &mut rec) {
-		let mut attenuation = Vec3::default();
-		let mut scattered = Ray::default();
-
-		if rec
-			.mat
-			.as_ref()
-			.unwrap()
-			.scatter(r, &rec, &mut attenuation, &mut scattered)
-		{
-			return attenuation * ray_color(scattered, world, depth - 1);
+	if let Some(rec) = world.hit(r, 0.001, utils::INFINITY) {
+		if let Some(scatter) = rec.mat.scatter(r, &rec) {
+			return scatter.attenuation * ray_color(scatter.scattered, world, depth - 1);
 		}
 
 		return Vec3::default();

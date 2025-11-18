@@ -1,4 +1,4 @@
-use crate::{HitRecord, Material, Ray, Vec3, utils, vec3};
+use crate::{HitRecord, Material, Ray, ScatterRecord, Vec3, utils, vec3};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(transparent)]
@@ -20,13 +20,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-	fn scatter(
-		&self,
-		r_in: Ray,
-		rec: &HitRecord,
-		attenuation: &mut Vec3,
-		scattered: &mut Ray,
-	) -> bool {
+	fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<ScatterRecord> {
 		let refraction_ratio = if rec.front_face {
 			1.0 / self.ir
 		} else {
@@ -46,8 +40,9 @@ impl Material for Dielectric {
 			vec3::refract(unit_direction, rec.normal, refraction_ratio)
 		};
 
-		*attenuation = Vec3::splat(1.0);
-		*scattered = Ray::new(rec.p, direction);
-		true
+		Some(ScatterRecord {
+			attenuation: Vec3::splat(1.0),
+			scattered: Ray::new(rec.p, direction),
+		})
 	}
 }

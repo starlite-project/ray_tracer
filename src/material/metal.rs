@@ -1,5 +1,5 @@
 use crate::{
-	HitRecord, Material, Ray,
+	HitRecord, Material, Ray, ScatterRecord,
 	vec3::{self, Vec3},
 };
 
@@ -17,17 +17,17 @@ impl Metal {
 }
 
 impl Material for Metal {
-	fn scatter(
-		&self,
-		r_in: Ray,
-		rec: &HitRecord,
-		attenuation: &mut Vec3,
-		scattered: &mut Ray,
-	) -> bool {
+	fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<super::ScatterRecord> {
 		let reflected = vec3::reflect(vec3::unit_vector(r_in.direction()), rec.normal);
+		let scattered = Ray::new(rec.p, reflected + self.fuzz * vec3::random_in_unit_sphere());
 
-		*attenuation = self.albedo;
-		*scattered = Ray::new(rec.p, reflected + self.fuzz * vec3::random_in_unit_sphere());
-		vec3::dot(scattered.direction(), rec.normal) > 0.0
+		if vec3::dot(scattered.direction(), rec.normal) > 0.0 {
+			Some(ScatterRecord {
+				attenuation: self.albedo,
+				scattered,
+			})
+		} else {
+			None
+		}
 	}
 }

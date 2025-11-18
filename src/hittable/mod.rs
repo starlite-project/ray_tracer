@@ -12,11 +12,11 @@ use super::{
 	vec3::{self, Vec3},
 };
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct HitRecord {
 	pub p: Vec3,
 	pub normal: Vec3,
-	pub mat: Option<Arc<dyn Material>>,
+	pub mat: Arc<dyn Material>,
 	pub t: f64,
 	pub front_face: bool,
 }
@@ -44,5 +44,5 @@ impl Debug for HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
-	fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
+	fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
