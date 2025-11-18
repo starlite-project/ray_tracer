@@ -1,8 +1,12 @@
-use std::io::prelude::*;
+use std::io::{Result as IoResult, prelude::*};
 
 use super::{Vec3, utils};
 
-pub fn write_color<W: Write>(out: &mut W, pixel_color: Vec3, samples_per_pixel: i32) {
+pub fn write_color<W: Write>(
+	out: &mut W,
+	pixel_color: Vec3,
+	samples_per_pixel: i32,
+) -> IoResult<()> {
 	let mut r = pixel_color.x();
 	let mut g = pixel_color.y();
 	let mut b = pixel_color.z();
@@ -20,5 +24,4 @@ pub fn write_color<W: Write>(out: &mut W, pixel_color: Vec3, samples_per_pixel: 
 		(256.0 * utils::clamp(g, 0.0, 0.999)) as i32,
 		(256.0 * utils::clamp(b, 0.0, 0.999))
 	)
-	.expect("writing color");
 }

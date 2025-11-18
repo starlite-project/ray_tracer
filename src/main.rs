@@ -1,53 +1,42 @@
-use std::{io, rc::Rc};
+use std::{
+	io::{self, Result as IoResult, prelude::*},
+	rc::Rc,
+};
 
 use ray_tracer::{
 	Camera, Dielectric, HitRecord, Hittable, HittableList, Lambertian, Metal, Ray, Sphere, Vec3,
 	color, utils, vec3,
 };
 
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const IMAGE_WIDTH: i32 = 400;
+const ASPECT_RATIO: f64 = 3.0 / 2.0;
+const IMAGE_WIDTH: i32 = 1200;
 const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
-const SAMPLES_PER_PIXEL: i32 = 100;
+const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
 
-fn main() {
-	let mut world = HittableList::default();
+fn main() -> IoResult<()> {
+	let world = random_scene();
 
-	let ground_material = Rc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.0)));
-	let center_material = Rc::new(Lambertian::new(Vec3::new(0.1, 0.2, 0.5)));
-	let left_material = Rc::new(Dielectric::new(1.5));
-	let right_material = Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.0));
-
-	world.add(Sphere::new(
-		Vec3::new(0.0, -100.5, -1.0),
-		100.0,
-		ground_material,
-	));
-	world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, center_material));
-	world.add(Sphere::new(
-		Vec3::new(-1.0, 0.0, -1.0),
-		0.5,
-		left_material.clone(),
-	));
-	world.add(Sphere::new(
-		Vec3::new(-1.0, 0.0, -1.0),
-		-0.45,
-		left_material,
-	));
-	world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right_material));
+	let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+	let lookat = Vec3::new(0.0, 0.0, -1.0);
+	let vup = Vec3::new(0.0, 1.0, 0.0);
+	let dist_to_focus = 10.0;
+	let aperture = 0.1;
 
 	let cam = Camera::new(
-		Vec3::new(-2.0, 2.0, 1.0),
-		Vec3::new(0.0, 0.0, -1.0),
-		Vec3::new(0.0, 1.0, 0.0),
+		lookfrom,
+		lookat,
+		vup,
 		20.0,
 		ASPECT_RATIO,
+		aperture,
+		dist_to_focus,
 	);
 
 	println!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255");
 
-	let mut stdout = io::stdout().lock();
+	let mut out = Vec::with_capacity(0x0170_0000);
+
 	for j in (0..IMAGE_HEIGHT).rev() {
 		eprint!("\rScanlines remaining: {j:0>3}");
 		for i in 0..IMAGE_WIDTH {
@@ -59,11 +48,14 @@ fn main() {
 				pixel_color += ray_color(r, &world, MAX_DEPTH);
 			}
 
-			color::write_color(&mut stdout, pixel_color, SAMPLES_PER_PIXEL);
+			color::write_color(&mut out, pixel_color, SAMPLES_PER_PIXEL)?;
 		}
 	}
 
-	eprintln!("\nDone.");
+	io::stdout().write_all(&out)?;
+
+	eprintln!("\nDone. Output length = {}.", out.len());
+	Ok(())
 }
 
 fn ray_color<H: Hittable>(r: Ray, world: &H, depth: i32) -> Vec3 {
@@ -91,4 +83,53 @@ fn ray_color<H: Hittable>(r: Ray, world: &H, depth: i32) -> Vec3 {
 	let unit_direction = vec3::unit_vector(r.direction());
 	let t = 0.5 * (unit_direction.y() + 1.0);
 	(1.0 - t) * Vec3::splat(1.0) + t * Vec3::new(0.5, 0.7, 1.0)
+}
+
+fn random_scene() -> HittableList {
+	let mut world = HittableList::default();
+
+	let ground_material = Rc::new(Lambertian::new(Vec3::splat(0.5)));
+	world.add(Sphere::new(
+		Vec3::new(0.0, -1000.0, 0.0),
+		1000.0,
+		ground_material,
+	));
+
+	for a in -11..11 {
+		for b in -11..11 {
+			let choose_mat = utils::random_double();
+			let center = Vec3::new(
+				a as f64 + 0.9 * utils::random_double(),
+				0.2,
+				b as f64 + 0.9 * utils::random_double(),
+			);
+
+			if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+				if choose_mat < 0.8 {
+					let albedo = Vec3::random() * Vec3::random();
+					let sphere_material = Rc::new(Lambertian::new(albedo));
+					world.add(Sphere::new(center, 0.2, sphere_material));
+				} else if choose_mat < 0.95 {
+					let albedo = Vec3::random_range(0.5, 1.0);
+					let fuzz = utils::random_double_range(0.0, 0.5);
+					let sphere_material = Rc::new(Metal::new(albedo, fuzz));
+					world.add(Sphere::new(center, 0.2, sphere_material));
+				} else {
+					let sphere_material = Rc::new(Dielectric::new(1.5));
+					world.add(Sphere::new(center, 0.2, sphere_material));
+				}
+			}
+		}
+	}
+
+	let material_1 = Rc::new(Dielectric::new(1.5));
+	world.add(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, material_1));
+
+	let material_2 = Rc::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1)));
+	world.add(Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, material_2));
+
+	let material_3 = Rc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
+	world.add(Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, material_3));
+
+	world
 }
