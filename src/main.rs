@@ -99,9 +99,9 @@ fn random_scene() -> HittableList {
 		for b in -11..11 {
 			let choose_mat = utils::random_double();
 			let center = Vec3::new(
-				a as f64 + 0.9 * utils::random_double(),
+				0.9f64.mul_add(utils::random_double(), f64::from(a)),
 				0.2,
-				b as f64 + 0.9 * utils::random_double(),
+				0.9f64.mul_add(utils::random_double(), f64::from(b)),
 			);
 
 			if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
