@@ -36,10 +36,11 @@ fn main() {
 	eprintln!("\nDone.");
 }
 
-fn ray_color(r: Ray, world: &dyn Hittable) -> Vec3 {
+fn ray_color<H: Hittable>(r: Ray, world: &H) -> Vec3 {
 	let mut rec = HitRecord::default();
 	if world.hit(r, 0.0, utils::INFINITY, &mut rec) {
-		return 0.5 * (rec.normal + Vec3::splat(1.0));
+		let direction = rec.normal + vec3::random_in_unit_sphere();
+		return 0.5 * ray_color(Ray::new(rec.p, direction), world);
 	}
 
 	let unit_direction = vec3::unit_vector(r.direction());

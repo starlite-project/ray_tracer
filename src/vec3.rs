@@ -3,6 +3,8 @@ use std::{
 	ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
+use super::utils;
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Vec3 {
 	x: f64,
@@ -45,6 +47,24 @@ impl Vec3 {
 	pub fn length_squared(self) -> f64 {
 		self.z
 			.mul_add(self.z, self.x.mul_add(self.x, self.y * self.y))
+	}
+
+	#[must_use]
+	pub fn random() -> Self {
+		Self::new(
+			utils::random_double(),
+			utils::random_double(),
+			utils::random_double(),
+		)
+	}
+
+	#[must_use]
+	pub fn random_range(min: f64, max: f64) -> Self {
+		Self::new(
+			utils::random_double_range(min, max),
+			utils::random_double_range(min, max),
+			utils::random_double_range(min, max),
+		)
 	}
 }
 
@@ -183,4 +203,16 @@ pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
 #[must_use]
 pub fn unit_vector(v: Vec3) -> Vec3 {
 	v / v.length()
+}
+
+#[must_use]
+pub fn random_in_unit_sphere() -> Vec3 {
+	loop {
+		let p = Vec3::random_range(-1.0, 1.0);
+		if p.length_squared() >= 1.0 {
+			continue;
+		}
+
+		break p;
+	}
 }
