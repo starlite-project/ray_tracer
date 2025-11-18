@@ -24,16 +24,26 @@ fn main() {
 		100.0,
 		ground_material,
 	));
+	world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, center_material));
 	world.add(Sphere::new(
 		Vec3::new(-1.0, 0.0, -1.0),
-		-0.4,
+		0.5,
 		left_material.clone(),
 	));
-	world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, center_material));
-	world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, left_material));
+	world.add(Sphere::new(
+		Vec3::new(-1.0, 0.0, -1.0),
+		-0.45,
+		left_material,
+	));
 	world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, right_material));
 
-	let cam = Camera::new();
+	let cam = Camera::new(
+		Vec3::new(-2.0, 2.0, 1.0),
+		Vec3::new(0.0, 0.0, -1.0),
+		Vec3::new(0.0, 1.0, 0.0),
+		20.0,
+		ASPECT_RATIO,
+	);
 
 	println!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255");
 
