@@ -12,6 +12,7 @@ rand = "0.9"
 elided_lifetimes_in_paths = "warn"
 
 [workspace.lints.clippy]
+write_with_newline = "allow"
 borrow_as_ptr = "deny"
 cast_possible_truncation = "allow"
 cast_possible_wrap = "allow"
