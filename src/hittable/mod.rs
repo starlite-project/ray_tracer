@@ -3,7 +3,7 @@ mod sphere;
 
 use std::{
 	fmt::{Debug, Formatter, Result as FmtResult},
-	rc::Rc,
+	sync::Arc,
 };
 
 pub use self::{list::*, sphere::*};
@@ -16,7 +16,7 @@ use super::{
 pub struct HitRecord {
 	pub p: Vec3,
 	pub normal: Vec3,
-	pub mat: Option<Rc<dyn Material>>,
+	pub mat: Option<Arc<dyn Material>>,
 	pub t: f64,
 	pub front_face: bool,
 }
@@ -43,6 +43,6 @@ impl Debug for HitRecord {
 	}
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
 	fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
 }

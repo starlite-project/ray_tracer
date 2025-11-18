@@ -1,6 +1,6 @@
 use std::{
 	fmt::{Debug, Formatter, Result as FmtResult},
-	rc::Rc,
+	sync::Arc,
 };
 
 use crate::{
@@ -12,12 +12,12 @@ use crate::{
 pub struct Sphere {
 	center: Vec3,
 	radius: f64,
-	mat: Rc<dyn Material>,
+	mat: Arc<dyn Material>,
 }
 
 impl Sphere {
 	#[must_use]
-	pub fn new(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
+	pub fn new(center: Vec3, radius: f64, mat: Arc<dyn Material>) -> Self {
 		Self {
 			center,
 			radius,

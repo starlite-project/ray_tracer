@@ -7,6 +7,7 @@ edition.workspace = true
 
 [dependencies]
 rand = "0.9"
+rayon = "1.11.0"
 
 [workspace.lints.rust]
 elided_lifetimes_in_paths = "warn"
