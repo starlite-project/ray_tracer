@@ -66,6 +66,11 @@ impl Vec3 {
 			utils::random_double_range(min, max),
 		)
 	}
+
+	#[must_use]
+	pub const fn is_near_zero(self) -> bool {
+		self.x.abs() < f64::EPSILON && self.y.abs() < f64::EPSILON && self.z.abs() < f64::EPSILON
+	}
 }
 
 impl Add for Vec3 {
@@ -215,4 +220,14 @@ pub fn random_in_unit_sphere() -> Vec3 {
 
 		break p;
 	}
+}
+
+#[must_use]
+pub fn random_unit_vector() -> Vec3 {
+	unit_vector(random_in_unit_sphere())
+}
+
+#[must_use]
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+	v - 2.0 * dot(v, n) * n
 }

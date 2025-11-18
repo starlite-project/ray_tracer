@@ -1,16 +1,22 @@
 mod list;
 mod sphere;
 
+use std::{
+	fmt::{Debug, Formatter, Result as FmtResult},
+	rc::Rc,
+};
+
 pub use self::{list::*, sphere::*};
 use super::{
-	Ray,
+	Material, Ray,
 	vec3::{self, Vec3},
 };
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Default, Clone)]
 pub struct HitRecord {
 	pub p: Vec3,
 	pub normal: Vec3,
+	pub mat: Option<Rc<dyn Material>>,
 	pub t: f64,
 	pub front_face: bool,
 }
@@ -23,6 +29,17 @@ impl HitRecord {
 		} else {
 			-outward_normal
 		};
+	}
+}
+
+impl Debug for HitRecord {
+	fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+		f.debug_struct("HitRecord")
+			.field("p", &self.p)
+			.field("normal", &self.normal)
+			.field("t", &self.t)
+			.field("front_face", &self.front_face)
+			.finish_non_exhaustive()
 	}
 }
 

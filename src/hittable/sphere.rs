@@ -1,18 +1,37 @@
+use std::{
+	fmt::{Debug, Formatter, Result as FmtResult},
+	rc::Rc,
+};
+
 use crate::{
-	HitRecord, Hittable, Ray,
+	HitRecord, Hittable, Material, Ray,
 	vec3::{self, Vec3},
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone)]
 pub struct Sphere {
 	center: Vec3,
 	radius: f64,
+	mat: Rc<dyn Material>,
 }
 
 impl Sphere {
 	#[must_use]
-	pub const fn new(center: Vec3, radius: f64) -> Self {
-		Self { center, radius }
+	pub fn new(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
+		Self {
+			center,
+			radius,
+			mat,
+		}
+	}
+}
+
+impl Debug for Sphere {
+	fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+		f.debug_struct("Sphere")
+			.field("center", &self.center)
+			.field("radius", &self.radius)
+			.finish_non_exhaustive()
 	}
 }
 
@@ -41,6 +60,7 @@ impl Hittable for Sphere {
 		rec.p = r.at(rec.t);
 		let outward_normal = (rec.p - self.center) / self.radius;
 		rec.set_face_normal(r, outward_normal);
+		rec.mat = Some(self.mat.clone());
 		true
 	}
 }

@@ -9,9 +9,9 @@ pub fn write_color<W: Write>(out: &mut W, pixel_color: Vec3, samples_per_pixel: 
 
 	let scale = 1.0 / f64::from(samples_per_pixel);
 
-	r *= scale;
-	g *= scale;
-	b *= scale;
+	r = f64::sqrt(scale * r);
+	g = f64::sqrt(scale * g);
+	b = f64::sqrt(scale * b);
 
 	writeln!(
 		out,
