@@ -1,5 +1,8 @@
+#![feature(portable_simd)]
+
 use std::{
 	io::{self, Result as IoResult, prelude::*},
+	simd::prelude::*,
 	sync::Arc,
 };
 
@@ -14,6 +17,7 @@ const IMAGE_WIDTH: i32 = 1200;
 const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
 const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
+const IMAGE_BOUND: f64x2 = f64x2::from_array([(IMAGE_WIDTH - 1) as f64, (IMAGE_HEIGHT - 1) as f64]);
 
 fn main() -> IoResult<()> {
 	let world = random_scene();
@@ -45,8 +49,13 @@ fn main() -> IoResult<()> {
 			.map(|i| {
 				let mut pixel_color = Vec3::default();
 				for _ in 0..SAMPLES_PER_PIXEL {
-					let u = (f64::from(i) + utils::random_double()) / f64::from(IMAGE_WIDTH - 1);
-					let v = (f64::from(j) + utils::random_double()) / f64::from(IMAGE_HEIGHT - 1);
+					let [u, v] = {
+						let current_pixel = f64x2::from_array([f64::from(i), f64::from(j)]);
+						let random_simd =
+							f64x2::from_array([utils::random_double(), utils::random_double()]);
+
+						((current_pixel + random_simd) / IMAGE_BOUND).to_array()
+					};
 					let r = cam.get_ray(u, v);
 					pixel_color += ray_color(r, &world, MAX_DEPTH);
 				}

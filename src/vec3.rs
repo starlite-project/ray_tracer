@@ -1,6 +1,7 @@
 use std::{
 	fmt::{Display, Formatter, Result as FmtResult, Write as _},
 	ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+	simd::{StdFloat as _, prelude::*},
 };
 
 use super::utils;
@@ -71,13 +72,30 @@ impl Vec3 {
 	pub const fn is_near_zero(self) -> bool {
 		self.x.abs() < f64::EPSILON && self.y.abs() < f64::EPSILON && self.z.abs() < f64::EPSILON
 	}
+
+	#[must_use]
+	pub fn mul_add(self, a: Self, b: Self) -> Self {
+		Self::from_simd(self.to_simd().mul_add(a.to_simd(), b.to_simd()))
+	}
+
+	#[must_use]
+	pub const fn to_simd(self) -> f64x4 {
+		f64x4::from_array([self.x, self.y, self.z, f64::NAN])
+	}
+
+	#[must_use]
+	pub const fn from_simd(simd: f64x4) -> Self {
+		let [x, y, z, _] = simd.to_array();
+
+		Self::new(x, y, z)
+	}
 }
 
 impl Add for Vec3 {
 	type Output = Self;
 
 	fn add(self, rhs: Self) -> Self::Output {
-		Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+		Self::from_simd(self.to_simd() + rhs.to_simd())
 	}
 }
 
@@ -85,7 +103,7 @@ impl Add<f64> for Vec3 {
 	type Output = Self;
 
 	fn add(self, rhs: f64) -> Self::Output {
-		Self::new(self.x + rhs, self.y + rhs, self.z + rhs)
+		Self::from_simd(self.to_simd() + f64x4::splat(rhs))
 	}
 }
 
@@ -109,7 +127,7 @@ impl Div for Vec3 {
 	type Output = Self;
 
 	fn div(self, rhs: Self) -> Self::Output {
-		Self::new(self.x / rhs.x, self.y / rhs.y, self.z / rhs.z)
+		Self::from_simd(self.to_simd() / rhs.to_simd())
 	}
 }
 
@@ -117,7 +135,7 @@ impl Div<f64> for Vec3 {
 	type Output = Self;
 
 	fn div(self, rhs: f64) -> Self::Output {
-		self / Self::splat(rhs)
+		Self::from_simd(self.to_simd() / f64x4::splat(rhs))
 	}
 }
 
@@ -137,7 +155,7 @@ impl Mul for Vec3 {
 	type Output = Self;
 
 	fn mul(self, rhs: Self) -> Self::Output {
-		Self::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z)
+		Self::from_simd(self.to_simd() * rhs.to_simd())
 	}
 }
 
@@ -145,7 +163,7 @@ impl Mul<f64> for Vec3 {
 	type Output = Self;
 
 	fn mul(self, rhs: f64) -> Self::Output {
-		self * Self::splat(rhs)
+		Self::from_simd(self.to_simd() * f64x4::splat(rhs))
 	}
 }
 
@@ -153,7 +171,7 @@ impl Mul<Vec3> for f64 {
 	type Output = Vec3;
 
 	fn mul(self, rhs: Vec3) -> Self::Output {
-		Vec3::splat(self) * rhs
+		Vec3::from_simd(f64x4::splat(self) * rhs.to_simd())
 	}
 }
 
@@ -173,7 +191,7 @@ impl Neg for Vec3 {
 	type Output = Self;
 
 	fn neg(self) -> Self::Output {
-		Self::new(-self.x, -self.y, -self.z)
+		Self::from_simd(-self.to_simd())
 	}
 }
 
@@ -181,7 +199,7 @@ impl Sub for Vec3 {
 	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self::Output {
-		Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+		Self::from_simd(self.to_simd() - rhs.to_simd())
 	}
 }
 
@@ -197,12 +215,19 @@ pub fn dot(u: Vec3, v: Vec3) -> f64 {
 }
 
 #[must_use]
+#[allow(clippy::many_single_char_names)]
 pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
-	Vec3::new(
-		u.y.mul_add(v.z, -(u.z * v.y)),
-		u.z.mul_add(v.x, -(u.x * v.z)),
-		u.x.mul_add(v.y, -(u.y * v.x)),
-	)
+	let a = u.to_simd();
+	let b = v.to_simd();
+
+	let a_yzx = simd_swizzle!(a, [1, 2, 0, 3]);
+	let b_yzs = simd_swizzle!(b, [1, 2, 0, 3]);
+
+	let c = a_yzx * b - b_yzs * a;
+
+	let c = simd_swizzle!(c, [1, 2, 0, 3]);
+
+	Vec3::from_simd(c)
 }
 
 #[must_use]
@@ -235,7 +260,7 @@ pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
 #[must_use]
 pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
 	let cos_theta = f64::min(dot(-uv, n), 1.0);
-	let r_out_perp = etai_over_etat * (uv + cos_theta * n);
+	let r_out_perp = etai_over_etat * (Vec3::splat(cos_theta).mul_add(n, uv));
 	let r_out_parallel = -f64::sqrt(f64::abs(1.0 - r_out_perp.length_squared())) * n;
 	r_out_perp + r_out_parallel
 }

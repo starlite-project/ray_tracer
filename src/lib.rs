@@ -1,3 +1,5 @@
+#![feature(portable_simd)]
+
 mod camera;
 pub mod color;
 mod hittable;
