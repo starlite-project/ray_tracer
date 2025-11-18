@@ -1,17 +1,14 @@
-use crate::{HitRecord, Hittable, Ray};
+use crate::{HitRecord, Hittable, HittableValue, Ray};
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 #[repr(transparent)]
 pub struct HittableList {
-	objects: Vec<Box<dyn Hittable>>,
+	objects: Vec<HittableValue>,
 }
 
 impl HittableList {
-	pub fn add<H>(&mut self, object: H)
-	where
-		H: Hittable + 'static,
-	{
-		self.objects.push(Box::new(object));
+	pub fn add(&mut self, object: HittableValue) {
+		self.objects.push(object);
 	}
 }
 

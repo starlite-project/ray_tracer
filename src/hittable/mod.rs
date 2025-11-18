@@ -1,14 +1,11 @@
 mod list;
 mod sphere;
 
-use std::{
-	fmt::{Debug, Formatter, Result as FmtResult},
-	sync::Arc,
-};
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 
 pub use self::{list::*, sphere::*};
 use super::{
-	Material, Ray,
+	MaterialValue, Ray,
 	vec3::{self, Vec3},
 };
 
@@ -16,7 +13,7 @@ use super::{
 pub struct HitRecord {
 	pub p: Vec3,
 	pub normal: Vec3,
-	pub mat: Arc<dyn Material>,
+	pub mat: MaterialValue,
 	pub t: f64,
 	pub front_face: bool,
 }
@@ -45,4 +42,31 @@ impl Debug for HitRecord {
 
 pub trait Hittable: Send + Sync {
 	fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+}
+
+#[derive(Debug, Clone)]
+pub enum HittableValue {
+	Sphere(Sphere),
+	List(HittableList),
+}
+
+impl Hittable for HittableValue {
+	fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+		match self {
+			Self::Sphere(s) => s.hit(r, t_min, t_max),
+			Self::List(l) => l.hit(r, t_min, t_max),
+		}
+	}
+}
+
+impl From<Sphere> for HittableValue {
+	fn from(value: Sphere) -> Self {
+		Self::Sphere(value)
+	}
+}
+
+impl From<HittableList> for HittableValue {
+	fn from(value: HittableList) -> Self {
+		Self::List(value)
+	}
 }
