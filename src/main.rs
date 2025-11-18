@@ -49,13 +49,8 @@ fn main() -> IoResult<()> {
 			.map(|i| {
 				let mut pixel_color = Vec3::default();
 				for _ in 0..SAMPLES_PER_PIXEL {
-					let [u, v] = {
-						let current_pixel = f64x2::from_array([f64::from(i), f64::from(j)]);
-						let random_simd =
-							f64x2::from_array([utils::random_double(), utils::random_double()]);
-
-						((current_pixel + random_simd) / IMAGE_BOUND).to_array()
-					};
+					let u = (f64::from(i) + utils::random_double()) / f64::from(IMAGE_WIDTH - 1);
+					let v = (f64::from(j) + utils::random_double()) / f64::from(IMAGE_HEIGHT - 1);
 					let r = cam.get_ray(u, v);
 					pixel_color += ray_color(r, &world, MAX_DEPTH);
 				}
