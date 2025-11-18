@@ -19,7 +19,10 @@ impl Metal {
 impl Material for Metal {
 	fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<super::ScatterRecord> {
 		let reflected = vec3::reflect(vec3::unit_vector(r_in.direction()), rec.normal);
-		let scattered = Ray::new(rec.p, reflected + self.fuzz * vec3::random_in_unit_sphere());
+		let scattered = Ray::new(
+			rec.p,
+			Vec3::splat(self.fuzz).mul_add(vec3::random_in_unit_sphere(), reflected),
+		);
 
 		if vec3::dot(scattered.direction(), rec.normal) > 0.0 {
 			Some(ScatterRecord {
