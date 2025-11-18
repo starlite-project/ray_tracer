@@ -1,8 +1,5 @@
-#![feature(portable_simd)]
-
 use std::{
 	io::{self, Result as IoResult, prelude::*},
-	simd::prelude::*,
 	sync::Arc,
 };
 
@@ -17,7 +14,6 @@ const IMAGE_WIDTH: i32 = 1200;
 const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
 const SAMPLES_PER_PIXEL: i32 = 500;
 const MAX_DEPTH: i32 = 50;
-const IMAGE_BOUND: f64x2 = f64x2::from_array([(IMAGE_WIDTH - 1) as f64, (IMAGE_HEIGHT - 1) as f64]);
 
 fn main() -> IoResult<()> {
 	let world = random_scene();
