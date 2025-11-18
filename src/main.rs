@@ -1,8 +1,8 @@
 use std::{io, rc::Rc};
 
 use ray_tracer::{
-	Camera, HitRecord, Hittable, HittableList, Lambertian, Metal, Ray, Sphere, Vec3, color, utils,
-	vec3,
+	Camera, Dielectric, HitRecord, Hittable, HittableList, Lambertian, Metal, Ray, Sphere, Vec3,
+	color, utils, vec3,
 };
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -15,14 +15,19 @@ fn main() {
 	let mut world = HittableList::default();
 
 	let ground_material = Rc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.0)));
-	let center_material = Rc::new(Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
-	let left_material = Rc::new(Metal::new(Vec3::splat(0.8), 0.3));
-	let right_material = Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0));
+	let center_material = Rc::new(Lambertian::new(Vec3::new(0.1, 0.2, 0.5)));
+	let left_material = Rc::new(Dielectric::new(1.5));
+	let right_material = Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.0));
 
 	world.add(Sphere::new(
 		Vec3::new(0.0, -100.5, -1.0),
 		100.0,
 		ground_material,
+	));
+	world.add(Sphere::new(
+		Vec3::new(-1.0, 0.0, -1.0),
+		-0.4,
+		left_material.clone(),
 	));
 	world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, center_material));
 	world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, left_material));
@@ -32,6 +37,7 @@ fn main() {
 
 	println!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255");
 
+	let mut stdout = io::stdout().lock();
 	for j in (0..IMAGE_HEIGHT).rev() {
 		eprint!("\rScanlines remaining: {j:0>3}");
 		for i in 0..IMAGE_WIDTH {
@@ -43,7 +49,7 @@ fn main() {
 				pixel_color += ray_color(r, &world, MAX_DEPTH);
 			}
 
-			color::write_color(&mut io::stdout(), pixel_color, SAMPLES_PER_PIXEL);
+			color::write_color(&mut stdout, pixel_color, SAMPLES_PER_PIXEL);
 		}
 	}
 
