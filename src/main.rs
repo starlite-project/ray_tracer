@@ -38,7 +38,7 @@ fn main() -> IoResult<()> {
 		dist_to_focus,
 	);
 
-	println!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255");
+	println!("P6\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255");
 
 	let mut out = Vec::with_capacity(0x0170_0000);
 

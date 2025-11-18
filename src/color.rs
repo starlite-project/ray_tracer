@@ -19,7 +19,7 @@ pub fn write_color<W: Write>(
 
 	let [r, g, b, _] = (clamped * f64x4::splat(256.0)).to_array();
 
-	writeln!(out, "{} {} {}", r as i32, g as i32, b as i32)?;
+	out.write_all(&[r as u8, g as u8, b as u8])?;
 
 	Ok(())
 }
