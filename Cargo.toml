@@ -6,6 +6,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+rand = "0.9"
 
 [workspace.lints.rust]
 elided_lifetimes_in_paths = "warn"
@@ -67,6 +68,3 @@ lto = "fat"
 
 [workspace.metadata.docs.rs]
 all-features = true
-
-[profile.dev]
-opt-level = 1
