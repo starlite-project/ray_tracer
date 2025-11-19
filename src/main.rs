@@ -1,4 +1,4 @@
-use std::io::{self, Result as IoResult, prelude::*};
+use std::io::{self, BufWriter, Result as IoResult, prelude::*};
 
 use ray_tracer::{
 	Camera, Dielectric, Hittable, HittableList, Lambertian, Material as _, Metal, Ray, Sphere,
@@ -33,7 +33,7 @@ fn main() -> IoResult<()> {
 
 	println!("P6\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255");
 
-	let mut out = Vec::with_capacity(0x0170_0000);
+	let mut out = BufWriter::new(io::stdout().lock());
 
 	for j in (0..IMAGE_HEIGHT).rev() {
 		eprint!("\rScanlines remaining: {j:0>3}");
@@ -57,9 +57,9 @@ fn main() -> IoResult<()> {
 		}
 	}
 
-	io::stdout().write_all(&out)?;
+	out.flush()?;
 
-	eprintln!("\nDone. Output length = {}.", out.len());
+	eprintln!("\nDone.");
 	Ok(())
 }
 
